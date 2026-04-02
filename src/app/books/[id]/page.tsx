@@ -11,6 +11,7 @@ export default function BookDetail() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [notesHistory, setNotesHistory] = useState<string[]>([])
   const [form, setForm] = useState({
     title: '',
     author: '',
@@ -221,16 +222,33 @@ export default function BookDetail() {
         </div>
 
         {/* Notes */}
-        <div>
-          <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Notes</label>
-          <textarea
-            value={form.notes}
-            onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-            placeholder="Your thoughts, reflections, favorite moments…"
-            rows={8}
-            className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50 resize-none leading-relaxed"
-          />
-        </div>
+       <div>
+  <div className="flex items-center justify-between mb-1">
+    <label className="block text-xs uppercase tracking-wider text-stone-400">Notes</label>
+    <button
+      onClick={() => {
+        if (notesHistory.length === 0) return
+        const prev = notesHistory[notesHistory.length - 1]
+        setForm(f => ({ ...f, notes: prev }))
+        setNotesHistory(h => h.slice(0, -1))
+      }}
+      disabled={notesHistory.length === 0}
+      className="text-xs text-stone-400 hover:text-stone-600 disabled:opacity-30 transition-colors px-2 py-1 border border-stone-200 rounded-md"
+    >
+      ↩ Undo
+    </button>
+  </div>
+  <textarea
+    value={form.notes}
+    onChange={e => {
+      setNotesHistory(h => [...h, form.notes])
+      setForm(f => ({ ...f, notes: e.target.value }))
+    }}
+    placeholder="Your thoughts, reflections, favorite moments…"
+    rows={8}
+    className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50 resize-none leading-relaxed"
+  />
+</div>
 
         <div className="flex gap-3 pt-2">
           <button
