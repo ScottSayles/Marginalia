@@ -12,8 +12,9 @@ export default async function Home() {
   return (
     <main className="min-h-screen p-8 max-w-3xl mx-auto">
       <div className="mb-8">
-  <div className="flex items-center justify-between">
-    <h1 className="text-4xl font-serif font-medium">Marginalia</h1>
+  <h1 className="text-4xl font-serif font-medium">Marginalia</h1>
+  <p className="text-sm text-gray-500 mt-1">My Reading Log</p>
+  <div className="mt-4">
     <Link
       href="/books/new"
       className="px-4 py-2 bg-stone-800 text-amber-100 rounded-lg text-sm hover:bg-stone-700 transition-colors"
@@ -21,7 +22,6 @@ export default async function Home() {
       + Add Book
     </Link>
   </div>
-  <p className="text-sm text-gray-500 mt-1">My Reading Log</p>
 </div>
 
       {error && <p className="text-red-500">Error: {error.message}</p>}
