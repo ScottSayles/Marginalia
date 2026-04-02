@@ -46,7 +46,7 @@ export default function NewBook() {
   console.log('API KEY:', process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY)
   try {
     const res = await fetch(
-  `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&maxResults=6&printType=books&key=${process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY}`
+  `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=6&printType=books&key=${process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY}`
 )
     const data = await res.json()
     setResults(data.items || [])
@@ -300,8 +300,8 @@ export default function NewBook() {
       setForm(f => ({ ...f, notes: e.target.value }))
     }}
     placeholder="Your thoughts, reflections, favorite moments…"
-    rows={8}
-    className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50 resize-none leading-relaxed"
+    rows={20}
+className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50 resize-y leading-relaxed"
   />
 </div>
 
