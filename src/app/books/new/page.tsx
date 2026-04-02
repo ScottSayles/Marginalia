@@ -5,14 +5,15 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 type SearchResult = {
-  key: string
-  title: string
-  author_name?: string[]
-  number_of_pages_median?: number
-  cover_i?: number
-  subject?: string[]
-  series?: string[]
-  first_publish_year?: number
+  id: string
+  volumeInfo: {
+    title: string
+    authors?: string[]
+    pageCount?: number
+    categories?: string[]
+    imageLinks?: { thumbnail?: string }
+    seriesInfo?: { shortSeriesBookTitle?: string; bookDisplayNumber?: string }
+  }
 }
 
 export default function NewBook() {
@@ -39,41 +40,41 @@ export default function NewBook() {
   })
 
   async function searchBooks() {
-    if (!query.trim()) return
-    setSearching(true)
-    setResults([])
-    try {
-      const res = await fetch(
-        `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=6&fields=key,title,author_name,number_of_pages_median,cover_i,subject,series`
-      )
-      const data = await res.json()
-      setResults(data.docs || [])
-    } catch {
-      alert('Search failed. You can enter details manually.')
-    } finally {
-      setSearching(false)
-    }
+  if (!query.trim()) return
+  setSearching(true)
+  setResults([])
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&maxResults=6&printType=books`
+    )
+    const data = await res.json()
+    setResults(data.items || [])
+  } catch {
+    alert('Search failed. You can enter details manually.')
+  } finally {
+    setSearching(false)
   }
+}
 
   function selectBook(book: SearchResult) {
-    const coverUrl = book.cover_i
-      ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-      : ''
-    const genre = book.subject
-      ? book.subject.slice(0, 1).join(', ')
-      : ''
-    setForm(f => ({
-      ...f,
-      title: book.title || '',
-      author: book.author_name?.[0] || '',
-      page_count: book.number_of_pages_median?.toString() || '',
-      series: book.series?.[0] || '',
-      genre,
-      cover_url: coverUrl,
-    }))
-    setResults([])
-    setQuery('')
-  }
+  const info = book.volumeInfo
+  const coverUrl = info.imageLinks?.thumbnail
+    ? info.imageLinks.thumbnail.replace('http://', 'https://')
+    : ''
+  const genre = info.categories?.[0] || ''
+  const series = info.seriesInfo?.shortSeriesBookTitle || ''
+  setForm(f => ({
+    ...f,
+    title: info.title || '',
+    author: info.authors?.[0] || '',
+    page_count: info.pageCount?.toString() || '',
+    genre,
+    series,
+    cover_url: coverUrl,
+  }))
+  setResults([])
+  setQuery('')
+}
 
   function setRating(field: 'star_rating' | 'spice_rating', value: number) {
     setForm(f => ({ ...f, [field]: value }))
@@ -135,33 +136,33 @@ export default function NewBook() {
 
       {/* Search results */}
       {results.length > 0 && (
-        <div className="border border-stone-200 rounded-lg overflow-hidden mb-6 shadow-sm">
-          {results.map((book) => (
-            <button
-              key={book.key}
-              onClick={() => selectBook(book)}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-amber-50 border-b border-stone-100 last:border-0 text-left transition-colors"
-            >
-              {book.cover_i ? (
-                <img
-                  src={`https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg`}
-                  className="w-8 h-11 object-cover rounded shadow-sm flex-shrink-0"
-                  alt={book.title}
-                />
-              ) : (
-                <div className="w-8 h-11 bg-stone-200 rounded flex-shrink-0" />
-              )}
-              <div>
-                <p className="text-sm font-medium text-stone-800">{book.title}</p>
-                <p className="text-xs text-stone-500 italic">{book.author_name?.[0]}</p>
-                {book.number_of_pages_median && (
-                  <p className="text-xs text-stone-400">{book.number_of_pages_median} pages</p>
-                )}
-              </div>
-            </button>
-          ))}
+  <div className="border border-stone-200 rounded-lg overflow-hidden mb-6 shadow-sm">
+    {results.map((book: SearchResult) => (
+      <button
+        key={book.id}
+        onClick={() => selectBook(book)}
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-amber-50 border-b border-stone-100 last:border-0 text-left transition-colors"
+      >
+        {book.volumeInfo.imageLinks?.thumbnail ? (
+          <img
+            src={book.volumeInfo.imageLinks.thumbnail.replace('http://', 'https://')}
+            className="w-8 h-11 object-cover rounded shadow-sm flex-shrink-0"
+            alt={book.volumeInfo.title}
+          />
+        ) : (
+          <div className="w-8 h-11 bg-stone-200 rounded flex-shrink-0" />
+        )}
+        <div>
+          <p className="text-sm font-medium text-stone-800">{book.volumeInfo.title}</p>
+          <p className="text-xs text-stone-500 italic">{book.volumeInfo.authors?.[0]}</p>
+          {book.volumeInfo.pageCount && (
+            <p className="text-xs text-stone-400">{book.volumeInfo.pageCount} pages</p>
+          )}
         </div>
-      )}
+      </button>
+    ))}
+  </div>
+)}
 
       {/* Cover preview */}
       {form.cover_url && (
