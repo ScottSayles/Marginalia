@@ -43,9 +43,10 @@ export default function NewBook() {
   if (!query.trim()) return
   setSearching(true)
   setResults([])
+  console.log('API KEY:', process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY)
   try {
     const res = await fetch(
-      `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&maxResults=6&printType=books`
+      focus:border-stone`https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&maxResults=6&printType=books&key=${process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY}`-400 bg-stone-50 text-stone-800
     )
     const data = await res.json()
     setResults(data.items || [])
