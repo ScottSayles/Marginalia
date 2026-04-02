@@ -96,14 +96,14 @@ export default function BookDetail() {
 
   if (loading) {
     return (
-      <main className="min-h-screen p-8 max-w-4xl mx-auto">
+      <main className="min-h-screen px-4 py-8 w-full max-w-4xl mx-auto">
         <p className="text-stone-400">Loading…</p>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen p-8 max-w-4xl mx-auto">
+    <main className="min-h-screen px-4 py-8 w-full max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           {form.cover_url && (

@@ -102,7 +102,7 @@ export default function NewBook() {
   }
 
   return (
-    <main className="min-h-screen p-8 max-w-2xl mx-auto">
+    <main className="min-h-screen px-4 py-8 w-full max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-serif font-medium">Add a Book</h1>
