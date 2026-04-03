@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Marginalia",
-  description: "My personal reading log",
+  title: "Honeydew Books",
+  description: "My smutty reading log",
 };
 
 export default function RootLayout({

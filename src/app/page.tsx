@@ -55,8 +55,8 @@ export default function Home() {
   return (
     <main className="min-h-screen px-6 py-8 w-full max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-4xl font-serif font-medium">Marginalia</h1>
-        <p className="text-sm text-gray-500 mt-1">My Reading Log</p>
+        <h1 className="text-4xl font-serif font-medium">Honeydew Books</h1>
+        <p className="text-sm text-gray-500 mt-1">My Smutty Reading Log</p>
         <div className="mt-4">
           <Link
             href="/books/new"

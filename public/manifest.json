@@ -1,7 +1,7 @@
 {
-  "name": "Book Journal",
-  "short_name": "Book Journal",
-  "description": "My personal reading log",
+  "name": "Honeydew Books",
+  "short_name": "Honeydew Books",
+  "description": "My smutty reading log",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F9F4ED",
