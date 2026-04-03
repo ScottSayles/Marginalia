@@ -194,13 +194,13 @@ async function searchBooks() {
   <option>Dark Romance</option>
   <option>Hockey Romance</option>
   <option>Mafia Romance</option>
+  <option>Romance</option>
   <option>Fantasy</option>
   <option>Literary Fiction</option>
   <option>Mystery / Thriller</option>
   <option>Sci-Fi</option>
   <option>Historical Fiction</option>
-  <option>Non-Fiction</option>
-  <option>Romance</option>
+  <option>Non-Fiction</option>  
   <option>Other</option>
 </select>
           </div>
@@ -222,7 +222,7 @@ async function searchBooks() {
           <div>
             <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Number in Series</label>
             <input type="text" value={form.series} onChange={e => setForm(f => ({ ...f, series: e.target.value }))}
-              placeholder="Number ins series..."
+              placeholder="Number in series..."
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 bg-stone-50 text-stone-800" />
           </div>
           <div>
