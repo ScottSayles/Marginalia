@@ -96,7 +96,7 @@ export default function BookDetail() {
 
   if (loading) {
     return (
-      <main className="min-h-screen px-4 py-8 w-full max-w-4xl mx-auto">
+      <main className="min-h-screen px-6 py-8 w-full">
         <p className="text-stone-400">Loading…</p>
       </main>
     )
@@ -139,6 +139,11 @@ export default function BookDetail() {
             <select value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50">
               <option value="">Select…</option>
+              <option value="">Select…</option>
+              <option>Paranormal Romance</option>
+              <option>Dark Romance</option>
+              <option>Hockey Romance</option>
+              <option>Mafia Romance</option>
               <option>Fantasy</option>
               <option>Literary Fiction</option>
               <option>Mystery / Thriller</option>
@@ -165,7 +170,7 @@ export default function BookDetail() {
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50" />
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Series</label>
+            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Number in Series</label>
             <input type="text" value={form.series} onChange={e => setForm(f => ({ ...f, series: e.target.value }))}
               placeholder="Series name…"
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50" />

@@ -5,15 +5,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 type SearchResult = {
-  id: string
-  volumeInfo: {
-    title: string
-    authors?: string[]
-    pageCount?: number
-    categories?: string[]
-    imageLinks?: { thumbnail?: string }
-    seriesInfo?: { shortSeriesBookTitle?: string; bookDisplayNumber?: string }
-  }
+  key: string
+  title: string
+  author_name?: string[]
+  number_of_pages_median?: number
+  cover_i?: number
+  subject?: string[]
+  series?: string[]
 }
 
 export default function NewBook() {
@@ -39,38 +37,34 @@ export default function NewBook() {
     cover_url: '',
   })
 
-  async function searchBooks() {
+async function searchBooks() {
   if (!query.trim()) return
   setSearching(true)
   setResults([])
-  console.log('API KEY:', process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY)
   try {
     const res = await fetch(
-  `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=6&printType=books&key=${process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY}`
-)
+      `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=6&fields=key,title,author_name,number_of_pages_median,cover_i,subject,series`
+    )
     const data = await res.json()
-    setResults(data.items || [])
+    setResults(data.docs || [])
   } catch {
     alert('Search failed. You can enter details manually.')
   } finally {
     setSearching(false)
   }
 }
-
   function selectBook(book: SearchResult) {
-  const info = book.volumeInfo
-  const coverUrl = info.imageLinks?.thumbnail
-    ? info.imageLinks.thumbnail.replace('http://', 'https://')
+  const coverUrl = book.cover_i
+    ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
     : ''
-  const genre = info.categories?.[0] || ''
-  const series = info.seriesInfo?.shortSeriesBookTitle || ''
+  const genre = book.subject ? book.subject.slice(0, 1).join(', ') : ''
   setForm(f => ({
     ...f,
-    title: info.title || '',
-    author: info.authors?.[0] || '',
-    page_count: info.pageCount?.toString() || '',
+    title: book.title || '',
+    author: book.author_name?.[0] || '',
+    page_count: book.number_of_pages_median?.toString() || '',
+    series: book.series?.[0] || '',
     genre,
-    series,
     cover_url: coverUrl,
   }))
   setResults([])
@@ -140,24 +134,24 @@ export default function NewBook() {
   <div className="border border-stone-200 rounded-lg overflow-hidden mb-6 shadow-sm">
     {results.map((book: SearchResult) => (
       <button
-        key={book.id}
+        key={book.key}
         onClick={() => selectBook(book)}
         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-amber-50 border-b border-stone-100 last:border-0 text-left transition-colors"
       >
-        {book.volumeInfo.imageLinks?.thumbnail ? (
+        {book.cover_i ? (
           <img
-            src={book.volumeInfo.imageLinks.thumbnail.replace('http://', 'https://')}
+            src={`https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg`}
             className="w-8 h-11 object-cover rounded shadow-sm flex-shrink-0"
-            alt={book.volumeInfo.title}
+            alt={book.title}
           />
         ) : (
           <div className="w-8 h-11 bg-stone-200 rounded flex-shrink-0" />
         )}
         <div>
-          <p className="text-sm font-medium text-stone-800">{book.volumeInfo.title}</p>
-          <p className="text-xs text-stone-500 italic">{book.volumeInfo.authors?.[0]}</p>
-          {book.volumeInfo.pageCount && (
-            <p className="text-xs text-stone-400">{book.volumeInfo.pageCount} pages</p>
+          <p className="text-sm font-medium text-stone-800">{book.title}</p>
+          <p className="text-xs text-stone-500 italic">{book.author_name?.[0]}</p>
+          {book.number_of_pages_median && (
+            <p className="text-xs text-stone-400">{book.number_of_pages_median} pages</p>
           )}
         </div>
       </button>
@@ -220,7 +214,7 @@ export default function NewBook() {
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 bg-stone-50 text-stone-800" />
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Series</label>
+            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Number in Series</label>
             <input type="text" value={form.series} onChange={e => setForm(f => ({ ...f, series: e.target.value }))}
               placeholder="Series name…"
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 bg-stone-50 text-stone-800" />
