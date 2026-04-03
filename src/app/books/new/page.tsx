@@ -32,7 +32,7 @@ export default function NewBook() {
     end_date: '',
     star_rating: 0,
     spice_rating: 0,
-    format: 'physical' as 'physical' | 'ebook' | 'audio',
+    format: 'physical' as  'ebook' | 'audio' | 'physical' ,
     notes: '',
     cover_url: '',
   })
@@ -83,9 +83,11 @@ async function searchBooks() {
     setSaving(true)
     const supabase = createClient()
     const { error } = await supabase.from('books').insert({
-      ...form,
-      page_count: form.page_count ? parseInt(form.page_count) : null,
-    })
+  ...form,
+  page_count: form.page_count ? parseInt(form.page_count) : null,
+  start_date: form.start_date || null,
+  end_date: form.end_date || null,
+})
     if (error) {
       alert('Error saving: ' + error.message)
       setSaving(false)
@@ -216,7 +218,7 @@ async function searchBooks() {
           <div>
             <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Number in Series</label>
             <input type="text" value={form.series} onChange={e => setForm(f => ({ ...f, series: e.target.value }))}
-              placeholder="Series name…"
+              placeholder="Number ins series..."
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 bg-stone-50 text-stone-800" />
           </div>
           <div>

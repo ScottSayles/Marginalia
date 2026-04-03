@@ -65,12 +65,14 @@ export default function BookDetail() {
     setSaving(true)
     const supabase = createClient()
     const { error } = await supabase
-      .from('books')
-      .update({
-        ...form,
-        page_count: form.page_count ? parseInt(form.page_count) : null,
-      })
-      .eq('id', id)
+  .from('books')
+  .update({
+    ...form,
+    page_count: form.page_count ? parseInt(form.page_count) : null,
+    start_date: form.start_date || null,
+    end_date: form.end_date || null,
+  })
+  .eq('id', id)
     if (error) {
       alert('Error saving: ' + error.message)
       setSaving(false)
