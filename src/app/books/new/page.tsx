@@ -263,7 +263,7 @@ async function searchBooks() {
         <div>
           <label className="block text-xs uppercase tracking-wider text-stone-400 mb-2">Format</label>
           <div className="flex gap-2">
-            {(['physical', 'ebook', 'audio'] as const).map(fmt => (
+            {(['ebook', 'audio', 'physical'] as const).map(fmt => (
               <button key={fmt} onClick={() => setForm(f => ({ ...f, format: fmt }))}
                 className={`px-4 py-2 rounded-lg text-sm border transition-colors ${
                   form.format === fmt
