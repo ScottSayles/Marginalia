@@ -188,17 +188,21 @@ async function searchBooks() {
           <div>
             <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Genre</label>
             <select value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}
-              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 bg-stone-50 text-stone-800">
-              <option value="">Select…</option>
-              <option>Fantasy</option>
-              <option>Literary Fiction</option>
-              <option>Mystery / Thriller</option>
-              <option>Sci-Fi</option>
-              <option>Historical Fiction</option>
-              <option>Non-Fiction</option>
-              <option>Romance</option>
-              <option>Other</option>
-            </select>
+  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50">
+  <option value="">Select…</option>
+  <option>Paranormal Romance</option>
+  <option>Dark Romance</option>
+  <option>Hockey Romance</option>
+  <option>Mafia Romance</option>
+  <option>Fantasy</option>
+  <option>Literary Fiction</option>
+  <option>Mystery / Thriller</option>
+  <option>Sci-Fi</option>
+  <option>Historical Fiction</option>
+  <option>Non-Fiction</option>
+  <option>Romance</option>
+  <option>Other</option>
+</select>
           </div>
           <div>
             <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Page Count</label>
