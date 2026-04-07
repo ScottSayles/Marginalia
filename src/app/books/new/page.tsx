@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+
 type SearchResult = {
   key: string
   title: string
@@ -36,6 +37,23 @@ export default function NewBook() {
     notes: '',
     cover_url: '',
   })
+
+  useEffect(() => {
+  const saved = localStorage.getItem('honeydew-draft')
+  if (saved) {
+    try {
+      setForm(JSON.parse(saved))
+    } catch {}
+  }
+}, [])
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    localStorage.setItem('honeydew-draft', JSON.stringify(form))
+  }, 1000)
+  return () => clearTimeout(timer)
+}, [form])
+
 
 async function searchBooks() {
   if (!query.trim()) return
@@ -93,8 +111,9 @@ async function searchBooks() {
       setSaving(false)
       return
     }
-    router.push('/')
-    router.refresh()
+    localStorage.removeItem('honeydew-draft')
+router.push('/')
+router.refresh()
   }
 
   return (
@@ -103,13 +122,17 @@ async function searchBooks() {
         <div>
           <h1 className="text-3xl font-serif font-medium">Add a Book</h1>
           <p className="text-sm text-gray-500 mt-1">Search or enter manually</p>
+          <p className="text-xs text-stone-400 mt-1">Draft saves automatically</p>
         </div>
         <button
-          onClick={() => router.back()}
-          className="text-sm text-stone-500 hover:text-stone-800"
-        >
-          ← Cancel
-        </button>
+  onClick={() => {
+    localStorage.removeItem('honeydew-draft')
+    router.back()
+  }}
+  className="text-sm text-stone-500 hover:text-stone-800"
+>
+  ← Cancel
+</button>
       </div>
 
       {/* Search */}
