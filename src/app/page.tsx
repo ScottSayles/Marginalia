@@ -57,6 +57,7 @@ export default function Home() {
       <div className="mb-6">
         <h1 className="text-4xl font-serif font-medium">Honeydew Books</h1>
         <p className="text-sm text-gray-500 mt-1">My Smutty Reading Log</p>
+        <p className="text-sm text-stone-400 mt-0.5">{books.length} {books.length === 1 ? 'book' : 'books'} total</p>
         <div className="mt-4">
           <Link
             href="/books/new"
@@ -103,7 +104,13 @@ export default function Home() {
           )}
         </div>
       )}
-
+{!loading && filtered.length > 0 && (
+  <p className="text-xs text-stone-400 mb-3">
+    Showing {filtered.length} {filtered.length === 1 ? 'book' : 'books'}
+    {search ? ` matching "${search}"` : ''}
+  </p>
+)}
+<div className="divide-y divide-stone-200"></div>
       <div className="divide-y divide-stone-200">
         {filtered.map((book: Book) => (
           <Link

@@ -166,10 +166,18 @@ export default function BookDetail() {
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50" />
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">End Date</label>
-            <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))}
-              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50" />
-          </div>
+  <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">End Date</label>
+  <div className="flex gap-2 items-center">
+    <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))}
+      className="flex-1 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50" />
+    {form.end_date && (
+      <button onClick={() => setForm(f => ({ ...f, end_date: '' }))}
+        className="text-xs text-stone-400 hover:text-red-500 transition-colors px-2 py-1 border border-stone-200 rounded-md">
+        ✕ Clear
+      </button>
+    )}
+  </div>
+</div>
           <div>
             <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Number in Series</label>
             <input type="text" value={form.series} onChange={e => setForm(f => ({ ...f, series: e.target.value }))}
