@@ -6,6 +6,9 @@ import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function BookDetail() {
+  const [coverQuery, setCoverQuery] = useState('')
+  const [coverResults, setCoverResults] = useState<{id: number, url: string}[]>([])
+  const [searchingCovers, setSearchingCovers] = useState(false)
   const router = useRouter()
   const { id } = useParams()
   const [loading, setLoading] = useState(true)
@@ -103,26 +106,79 @@ export default function BookDetail() {
       </main>
     )
   }
-
+async function searchCovers() {
+  if (!coverQuery.trim()) return
+  setSearchingCovers(true)
+  setCoverResults([])
+  try {
+    const res = await fetch(
+      `https://openlibrary.org/search.json?title=${encodeURIComponent(coverQuery)}&limit=10&fields=cover_i`
+    )
+    const data = await res.json()
+    const covers = (data.docs || [])
+      .filter((d: any) => d.cover_i)
+      .map((d: any) => ({
+        id: d.cover_i,
+        url: `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`
+      }))
+    setCoverResults(covers)
+  } catch {
+    alert('Cover search failed.')
+  } finally {
+    setSearchingCovers(false)
+  }
+}
   return (
     <main className="min-h-screen px-4 py-8 w-full max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          {form.cover_url && (
-            <img src={form.cover_url} alt="Cover" className="w-12 h-16 object-cover rounded shadow" />
-          )}
-          <div>
-            <h1 className="text-3xl font-serif font-medium text-stone-800">{form.title}</h1>
-            <p className="text-sm text-stone-500 italic">{form.author}</p>
-          </div>
+    <div className="flex items-start justify-between mb-8">
+  <div className="flex items-start gap-6">
+    <div className="flex flex-col items-center gap-2">
+      {form.cover_url ? (
+        <img src={form.cover_url} alt="Cover" className="w-24 h-36 object-cover rounded shadow-md" />
+      ) : (
+        <div className="w-24 h-36 bg-stone-800 rounded shadow-md flex items-center justify-center">
+          <div className="w-2 h-16 bg-amber-400 rounded" />
         </div>
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-stone-500 hover:text-stone-800"
-        >
-          ← Back
+      )}
+      {form.cover_url && (
+        <button onClick={() => setForm(f => ({ ...f, cover_url: '' }))}
+          className="text-xs text-stone-400 hover:text-red-500 transition-colors">
+          ✕ Remove
+        </button>
+      )}
+    </div>
+    <div>
+      <h1 className="text-3xl font-serif font-medium text-stone-800">{form.title}</h1>
+      <p className="text-sm text-stone-500 italic">{form.author}</p>
+      <div className="flex gap-2 mt-3">
+        <input
+          type="text"
+          placeholder="Search for a cover…"
+          value={coverQuery}
+          onChange={e => setCoverQuery(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && searchCovers()}
+          className="border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50"
+        />
+        <button onClick={searchCovers} disabled={searchingCovers}
+          className="px-3 py-2 bg-stone-800 text-amber-100 rounded-lg text-sm hover:bg-stone-700 disabled:opacity-50 transition-colors">
+          {searchingCovers ? '…' : 'Search'}
         </button>
       </div>
+      {coverResults.length > 0 && (
+        <div className="flex gap-2 mt-3 flex-wrap">
+          {coverResults.map(cover => (
+            <button key={cover.id} onClick={() => { setForm(f => ({ ...f, cover_url: cover.url })); setCoverResults([]) }}>
+              <img src={cover.url} alt="Cover option" className="w-12 h-18 object-cover rounded shadow hover:ring-2 hover:ring-amber-400 transition-all" style={{height: '72px'}} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+  <button onClick={() => router.back()} className="text-sm text-stone-500 hover:text-stone-800">
+    ← Back
+  </button>
+</div>
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
