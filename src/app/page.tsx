@@ -118,7 +118,7 @@ export default function Home() {
     href={`/books/${book.id}`}
     className="flex items-center gap-4 py-4 hover:bg-stone-50 px-2 rounded-lg transition-colors group"
   >
-    <span className="text-xs text-stone-400 w-5 text-right flex-shrink-0">{index + 1}</span>
+    <span className="text-xs text-stone-400 w-5 text-right flex-shrink-0">{filtered.length - index}</span>
             {book.cover_url ? (
               <img
                 src={book.cover_url}
