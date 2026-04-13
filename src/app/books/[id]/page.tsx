@@ -151,19 +151,28 @@ async function searchCovers() {
       <h1 className="text-3xl font-serif font-medium text-stone-800">{form.title}</h1>
       <p className="text-sm text-stone-500 italic">{form.author}</p>
       <div className="flex gap-2 mt-3">
-        <input
-          type="text"
-          placeholder="Search for a cover…"
-          value={coverQuery}
-          onChange={e => setCoverQuery(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && searchCovers()}
-          className="border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50"
-        />
-        <button onClick={searchCovers} disabled={searchingCovers}
-          className="px-3 py-2 bg-stone-800 text-amber-100 rounded-lg text-sm hover:bg-stone-700 disabled:opacity-50 transition-colors">
-          {searchingCovers ? '…' : 'Search'}
-        </button>
-      </div>
+  <input
+    type="text"
+    placeholder="Search for a cover…"
+    value={coverQuery}
+    onChange={e => setCoverQuery(e.target.value)}
+    onKeyDown={e => e.key === 'Enter' && searchCovers()}
+    className="border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50"
+  />
+  <button onClick={searchCovers} disabled={searchingCovers}
+    className="px-3 py-2 bg-stone-800 text-amber-100 rounded-lg text-sm hover:bg-stone-700 disabled:opacity-50 transition-colors">
+    {searchingCovers ? '…' : 'Search'}
+  </button>
+</div>
+<div className="flex gap-2 mt-2">
+  <input
+    type="text"
+    placeholder="Or paste a cover image URL…"
+    value={form.cover_url}
+    onChange={e => setForm(f => ({ ...f, cover_url: e.target.value }))}
+    className="border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50 w-64"
+  />
+</div>
       {coverResults.length > 0 && (
         <div className="flex gap-2 mt-3 flex-wrap">
           {coverResults.map(cover => (
