@@ -51,6 +51,41 @@ export default function Home() {
           return (b.created_at || '').localeCompare(a.created_at || '')
       }
     })
+    function exportToCSV() {
+  const headers = [
+    'Title', 'Author', 'Genre', 'Page Count', 'Series', 'Number in Series',
+    'Format', 'Star Rating', 'Spice Rating', 'Start Date', 'End Date', 'Notes', 'Cover URL', 'Date Added'
+  ]
+
+  const rows = books.map(b => [
+    b.title || '',
+    b.author || '',
+    b.genre || '',
+    b.page_count || '',
+    b.series || '',
+    b.next_in_series || '',
+    b.format || '',
+    b.star_rating || 0,
+    b.spice_rating || 0,
+    b.start_date || '',
+    b.end_date || '',
+    `"${(b.notes || '').replace(/"/g, '""')}"`,
+    b.cover_url || '',
+    b.created_at ? new Date(b.created_at).toLocaleDateString() : ''
+  ])
+
+  const csv = [headers, ...rows]
+    .map(row => row.join(','))
+    .join('\n')
+
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `honeydew-books-${new Date().toISOString().split('T')[0]}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
   return (
     <main className="min-h-screen px-6 py-8 w-full max-w-4xl mx-auto">
@@ -58,14 +93,20 @@ export default function Home() {
         <h1 className="text-4xl font-serif font-medium">Honeydew Books</h1>
         <p className="text-sm text-gray-500 mt-1">My Smutty Reading Log</p>
         <p className="text-sm text-stone-400 mt-0.5">{books.length} {books.length === 1 ? 'book' : 'books'} total</p>
-        <div className="mt-4">
-          <Link
-            href="/books/new"
-            className="px-4 py-2 bg-stone-800 text-amber-100 rounded-lg text-sm hover:bg-stone-700 transition-colors"
-          >
-            + Add Book
-          </Link>
-        </div>
+        <div className="mt-4 flex gap-3">
+  <Link
+    href="/books/new"
+    className="px-4 py-2 bg-stone-800 text-amber-100 rounded-lg text-sm hover:bg-stone-700 transition-colors"
+  >
+    + Add Book
+  </Link>
+  <button
+    onClick={exportToCSV}
+    className="px-4 py-2 border border-stone-300 text-stone-600 rounded-lg text-sm hover:bg-stone-100 transition-colors"
+  >
+    ↓ Export
+  </button>
+</div>
       </div>
 
       {/* Search and sort */}
