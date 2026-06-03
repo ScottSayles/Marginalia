@@ -175,8 +175,11 @@ export default function Home() {
               <p className="font-medium text-stone-800 truncate">{book.title}</p>
               <p className="text-sm text-stone-500 italic truncate">{book.author}</p>
               {book.series && (
-                <p className="text-xs text-stone-400 mt-0.5">{book.series}</p>
-              )}
+  <p className="text-xs text-stone-400 mt-0.5">{book.series}</p>
+)}
+{book.short_note && (
+  <p className="text-xs font-bold text-amber-700 mt-1">{book.short_note}</p>
+)}
             </div>
             <div className="flex flex-col items-end gap-1 flex-shrink-0">
               {book.star_rating > 0 && (

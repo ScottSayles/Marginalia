@@ -22,6 +22,7 @@ export default function BookDetail() {
     page_count: '',
     series: '',
     next_in_series: '',
+    short_note: '',
     start_date: '',
     end_date: '',
     star_rating: 0,
@@ -45,7 +46,7 @@ export default function BookDetail() {
         return
       }
       setForm({
-        title: data.title || '',
+           title: data.title || '',
         author: data.author || '',
         genre: data.genre || '',
         page_count: data.page_count?.toString() || '',
@@ -58,6 +59,7 @@ export default function BookDetail() {
         format: data.format || 'physical',
         notes: data.notes || '',
         cover_url: data.cover_url || '',
+        short_note: data.short_note || '',
       })
       setLoading(false)
     }
@@ -302,6 +304,17 @@ async function searchCovers() {
 
         {/* Notes */}
        <div>
+      <div>
+  <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Short Note</label>
+  <input
+    type="text"
+    value={form.short_note}
+    onChange={e => setForm(f => ({ ...f, short_note: e.target.value }))}
+    placeholder="One line summary or highlight…"
+    maxLength={120}
+    className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50"
+  />
+</div>  
   <div className="flex items-center justify-between mb-1">
     <label className="block text-xs uppercase tracking-wider text-stone-400">Notes</label>
     <button

@@ -13,5 +13,6 @@ export type Book = {
   format: 'physical' | 'ebook' | 'audio'
   notes: string | null
   cover_url: string | null
+  short_note: string | null
   created_at: string
 }
