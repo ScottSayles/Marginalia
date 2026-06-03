@@ -172,15 +172,15 @@ export default function Home() {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-stone-800 truncate">{book.title}</p>
-              <p className="text-sm text-stone-500 italic truncate">{book.author}</p>
-              {book.series && (
-  <p className="text-xs text-stone-400 mt-0.5">{book.series}</p>
-)}
+  <p className="font-medium text-stone-800 truncate">{book.title}</p>
+  <p className="text-sm text-stone-500 italic truncate">{book.author}</p>
+  {book.series && (
+    <p className="text-xs text-stone-400 mt-0.5">{book.series}</p>
+  )}
+</div>
 {book.short_note && (
-  <p className="text-xs font-bold text-amber-700 mt-1">{book.short_note}</p>
+  <p className="text-xs font-bold text-amber-700 px-4 flex-shrink-0 max-w-xs text-center">{book.short_note}</p>
 )}
-            </div>
             <div className="flex flex-col items-end gap-1 flex-shrink-0">
               {book.star_rating > 0 && (
                 <p className="text-amber-400 text-sm tracking-tight">
