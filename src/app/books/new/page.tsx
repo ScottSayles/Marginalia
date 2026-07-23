@@ -21,6 +21,10 @@ export default function NewBook() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [searching, setSearching] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [coverQuery, setCoverQuery] = useState('')
+  const [coverResults, setCoverResults] = useState<{id: number, url: string}[]>([])
+  const [searchingCovers, setSearchingCovers] = useState(false)
+  const [showCoverSearch, setShowCoverSearch] = useState(false)
   const [notesHistory, setNotesHistory] = useState<string[]>([])
   const [form, setForm] = useState({
     title: '',
@@ -116,6 +120,29 @@ async function searchBooks() {
 router.push('/')
 router.refresh()
   }
+  async function searchCovers() {
+  const q = coverQuery.trim() || form.title.trim()
+  if (!q) return
+  setSearchingCovers(true)
+  setCoverResults([])
+  try {
+    const res = await fetch(
+      `https://openlibrary.org/search.json?title=${encodeURIComponent(q)}&limit=12&fields=cover_i`
+    )
+    const data = await res.json()
+    const covers = (data.docs || [])
+      .filter((d: any) => d.cover_i)
+      .map((d: any) => ({
+        id: d.cover_i,
+        url: `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`
+      }))
+    setCoverResults(covers)
+  } catch {
+    alert('Cover search failed.')
+  } finally {
+    setSearchingCovers(false)
+  }
+}
 
   return (
     <main className="min-h-screen px-4 py-8 w-full max-w-4xl mx-auto">
@@ -185,16 +212,89 @@ router.refresh()
   </div>
 )}
 
-      {/* Cover preview */}
-      {form.cover_url && (
-        <div className="flex items-center gap-4 mb-6 p-4 bg-stone-50 rounded-lg border border-stone-200">
-          <img src={form.cover_url} alt="Cover" className="w-14 h-20 object-cover rounded shadow" />
-          <div>
-            <p className="font-medium text-stone-800">{form.title}</p>
-            <p className="text-sm text-stone-500 italic">{form.author}</p>
-          </div>
+      {/* Cover */}
+<div className="mb-6 p-4 bg-stone-50 rounded-lg border border-stone-200">
+  <div className="flex items-center gap-4">
+    {form.cover_url ? (
+      <img src={form.cover_url} alt="Cover" className="w-14 h-20 object-cover rounded shadow flex-shrink-0" />
+    ) : (
+      <div className="w-14 h-20 bg-stone-200 rounded flex items-center justify-center text-stone-400 text-[10px] flex-shrink-0">
+        No cover
+      </div>
+    )}
+    <div className="flex-1 min-w-0">
+      <p className="font-medium text-stone-800 truncate">{form.title || 'Untitled'}</p>
+      <p className="text-sm text-stone-500 italic truncate">{form.author}</p>
+      <div className="flex gap-3 mt-2">
+        <button
+          type="button"
+          onClick={() => { setShowCoverSearch(s => !s); if (!coverQuery) setCoverQuery(form.title) }}
+          className="text-xs text-stone-600 underline"
+        >
+          {form.cover_url ? 'Change cover' : 'Find a cover'}
+        </button>
+        {form.cover_url && (
+          <button
+            type="button"
+            onClick={() => setForm(f => ({ ...f, cover_url: '' }))}
+            className="text-xs text-stone-400 underline"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+
+  {showCoverSearch && (
+    <div className="mt-4 pt-4 border-t border-stone-200">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={coverQuery}
+          onChange={e => setCoverQuery(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); searchCovers() } }}
+          placeholder="Search covers by title…"
+          className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400 bg-white"
+        />
+        <button
+          type="button"
+          onClick={searchCovers}
+          disabled={searchingCovers}
+          className="px-4 py-2 bg-stone-800 text-amber-100 rounded-lg text-sm disabled:opacity-50"
+        >
+          {searchingCovers ? '…' : 'Search'}
+        </button>
+      </div>
+
+      {coverResults.length > 0 && (
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 mt-4">
+          {coverResults.map(c => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => { setForm(f => ({ ...f, cover_url: c.url })); setShowCoverSearch(false); setCoverResults([]) }}
+              className="rounded overflow-hidden border-2 border-transparent hover:border-stone-400 transition-colors"
+            >
+              <img src={c.url} alt="" className="w-full h-24 object-cover" />
+            </button>
+          ))}
         </div>
       )}
+
+      <div className="mt-4">
+        <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Or paste an image URL</label>
+        <input
+          type="text"
+          value={form.cover_url}
+          onChange={e => setForm(f => ({ ...f, cover_url: e.target.value }))}
+          placeholder="https://…"
+          className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400 bg-white"
+        />
+      </div>
+    </div>
+  )}
+</div>
 
       {/* Form fields */}
       <div className="space-y-4">
