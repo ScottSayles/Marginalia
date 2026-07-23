@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-
+import CoverPicker from '@/components/CoverPicker'
 
 type SearchResult = {
   key: string
@@ -15,87 +15,95 @@ type SearchResult = {
   series?: string[]
 }
 
+const EMPTY_FORM = {
+  title: '',
+  author: '',
+  genre: '',
+  page_count: '',
+  series: '',
+  next_in_series: '',
+  short_note: '',
+  start_date: '',
+  end_date: '',
+  star_rating: 0,
+  spice_rating: 0,
+  format: 'physical' as 'ebook' | 'audio' | 'physical',
+  notes: '',
+  cover_url: '',
+}
+
 export default function NewBook() {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [searching, setSearching] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [coverQuery, setCoverQuery] = useState('')
-  const [coverResults, setCoverResults] = useState<{id: number, url: string}[]>([])
-  const [searchingCovers, setSearchingCovers] = useState(false)
-  const [showCoverSearch, setShowCoverSearch] = useState(false)
   const [notesHistory, setNotesHistory] = useState<string[]>([])
-  const [form, setForm] = useState({
-    title: '',
-    author: '',
-    genre: '',
-    page_count: '',
-    series: '',
-    next_in_series: '',
-    short_note: '',
-    start_date: '',
-    end_date: '',
-    star_rating: 0,
-    spice_rating: 0,
-    format: 'physical' as  'ebook' | 'audio' | 'physical' ,
-    notes: '',
-    cover_url: '',
-  })
+  const [form, setForm] = useState(EMPTY_FORM)
 
   useEffect(() => {
-  const saved = localStorage.getItem('honeydew-draft')
-  if (saved) {
+    const saved = localStorage.getItem('honeydew-draft')
+    if (saved) {
+      try {
+        setForm({ ...EMPTY_FORM, ...JSON.parse(saved) })
+      } catch {}
+    }
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem('honeydew-draft', JSON.stringify(form))
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [form])
+
+  async function searchBooks() {
+    if (!query.trim()) return
+    setSearching(true)
+    setResults([])
     try {
-      setForm(JSON.parse(saved))
-    } catch {}
+      const res = await fetch(
+        `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=6&fields=key,title,author_name,number_of_pages_median,cover_i,subject,series`
+      )
+      const data = await res.json()
+      setResults(data.docs || [])
+    } catch {
+      alert('Search failed. You can enter details manually.')
+    } finally {
+      setSearching(false)
+    }
   }
-}, [])
 
-useEffect(() => {
-  const timer = setTimeout(() => {
-    localStorage.setItem('honeydew-draft', JSON.stringify(form))
-  }, 1000)
-  return () => clearTimeout(timer)
-}, [form])
-
-
-async function searchBooks() {
-  if (!query.trim()) return
-  setSearching(true)
-  setResults([])
-  try {
-    const res = await fetch(
-      `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=6&fields=key,title,author_name,number_of_pages_median,cover_i,subject,series`
-    )
-    const data = await res.json()
-    setResults(data.docs || [])
-  } catch {
-    alert('Search failed. You can enter details manually.')
-  } finally {
-    setSearching(false)
-  }
-}
   function selectBook(book: SearchResult) {
-  const coverUrl = book.cover_i
-    ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-    : ''
-  const genre = book.subject ? book.subject.slice(0, 1).join(', ') : ''
-  setForm(f => ({
-    ...f,
-    title: book.title || '',
-    author: book.author_name?.[0] || '',
-    page_count: book.number_of_pages_median?.toString() || '',
-    series: book.series?.[0] || '',
-    genre,
-    cover_url: coverUrl,
-  }))
-  setResults([])
-  setQuery('')
-}
+    const coverUrl = book.cover_i
+      ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+      : ''
+    const genre = book.subject ? book.subject.slice(0, 1).join(', ') : ''
+    setForm(f => ({
+      ...f,
+      title: book.title || '',
+      author: book.author_name?.[0] || '',
+      page_count: book.number_of_pages_median?.toString() || '',
+      series: book.series?.[0] || '',
+      genre,
+      cover_url: coverUrl,
+    }))
+    setResults([])
+    setQuery('')
+  }
 
   function setRating(field: 'star_rating' | 'spice_rating', value: number) {
     setForm(f => ({ ...f, [field]: value }))
+  }
+
+  function updateNotes(next: string) {
+    setNotesHistory(h => {
+      const last = h[h.length - 1]
+      // only snapshot once per pause in typing
+      if (last === form.notes) return h
+      return [...h.slice(-49), form.notes]
+    })
+    setForm(f => ({ ...f, notes: next }))
   }
 
   async function handleSave() {
@@ -106,43 +114,20 @@ async function searchBooks() {
     setSaving(true)
     const supabase = createClient()
     const { error } = await supabase.from('books').insert({
-  ...form,
-  page_count: form.page_count ? parseInt(form.page_count) : null,
-  start_date: form.start_date || null,
-  end_date: form.end_date || null,
-})
+      ...form,
+      page_count: form.page_count ? parseInt(form.page_count) : null,
+      start_date: form.start_date || null,
+      end_date: form.end_date || null,
+    })
     if (error) {
       alert('Error saving: ' + error.message)
       setSaving(false)
       return
     }
     localStorage.removeItem('honeydew-draft')
-router.push('/')
-router.refresh()
+    router.push('/')
+    router.refresh()
   }
-  async function searchCovers() {
-  const q = coverQuery.trim() || form.title.trim()
-  if (!q) return
-  setSearchingCovers(true)
-  setCoverResults([])
-  try {
-    const res = await fetch(
-      `https://openlibrary.org/search.json?title=${encodeURIComponent(q)}&limit=12&fields=cover_i`
-    )
-    const data = await res.json()
-    const covers = (data.docs || [])
-      .filter((d: any) => d.cover_i)
-      .map((d: any) => ({
-        id: d.cover_i,
-        url: `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`
-      }))
-    setCoverResults(covers)
-  } catch {
-    alert('Cover search failed.')
-  } finally {
-    setSearchingCovers(false)
-  }
-}
 
   return (
     <main className="min-h-screen px-4 py-8 w-full max-w-4xl mx-auto">
@@ -153,14 +138,14 @@ router.refresh()
           <p className="text-xs text-stone-400 mt-1">Draft saves automatically</p>
         </div>
         <button
-  onClick={() => {
-    localStorage.removeItem('honeydew-draft')
-    router.back()
-  }}
-  className="text-sm text-stone-500 hover:text-stone-800"
->
-  ← Cancel
-</button>
+          onClick={() => {
+            localStorage.removeItem('honeydew-draft')
+            router.back()
+          }}
+          className="text-sm text-stone-500 hover:text-stone-800"
+        >
+          ← Cancel
+        </button>
       </div>
 
       {/* Search */}
@@ -184,117 +169,41 @@ router.refresh()
 
       {/* Search results */}
       {results.length > 0 && (
-  <div className="border border-stone-200 rounded-lg overflow-hidden mb-6 shadow-sm">
-    {results.map((book: SearchResult) => (
-      <button
-        key={book.key}
-        onClick={() => selectBook(book)}
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-amber-50 border-b border-stone-100 last:border-0 text-left transition-colors"
-      >
-        {book.cover_i ? (
-          <img
-            src={`https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg`}
-            className="w-8 h-11 object-cover rounded shadow-sm flex-shrink-0"
-            alt={book.title}
-          />
-        ) : (
-          <div className="w-8 h-11 bg-stone-200 rounded flex-shrink-0" />
-        )}
-        <div>
-          <p className="text-sm font-medium text-stone-800">{book.title}</p>
-          <p className="text-xs text-stone-500 italic">{book.author_name?.[0]}</p>
-          {book.number_of_pages_median && (
-            <p className="text-xs text-stone-400">{book.number_of_pages_median} pages</p>
-          )}
-        </div>
-      </button>
-    ))}
-  </div>
-)}
-
-      {/* Cover */}
-<div className="mb-6 p-4 bg-stone-50 rounded-lg border border-stone-200">
-  <div className="flex items-center gap-4">
-    {form.cover_url ? (
-      <img src={form.cover_url} alt="Cover" className="w-14 h-20 object-cover rounded shadow flex-shrink-0" />
-    ) : (
-      <div className="w-14 h-20 bg-stone-200 rounded flex items-center justify-center text-stone-400 text-[10px] flex-shrink-0">
-        No cover
-      </div>
-    )}
-    <div className="flex-1 min-w-0">
-      <p className="font-medium text-stone-800 truncate">{form.title || 'Untitled'}</p>
-      <p className="text-sm text-stone-500 italic truncate">{form.author}</p>
-      <div className="flex gap-3 mt-2">
-        <button
-          type="button"
-          onClick={() => { setShowCoverSearch(s => !s); if (!coverQuery) setCoverQuery(form.title) }}
-          className="text-xs text-stone-600 underline"
-        >
-          {form.cover_url ? 'Change cover' : 'Find a cover'}
-        </button>
-        {form.cover_url && (
-          <button
-            type="button"
-            onClick={() => setForm(f => ({ ...f, cover_url: '' }))}
-            className="text-xs text-stone-400 underline"
-          >
-            Remove
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-
-  {showCoverSearch && (
-    <div className="mt-4 pt-4 border-t border-stone-200">
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={coverQuery}
-          onChange={e => setCoverQuery(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); searchCovers() } }}
-          placeholder="Search covers by title…"
-          className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400 bg-white"
-        />
-        <button
-          type="button"
-          onClick={searchCovers}
-          disabled={searchingCovers}
-          className="px-4 py-2 bg-stone-800 text-amber-100 rounded-lg text-sm disabled:opacity-50"
-        >
-          {searchingCovers ? '…' : 'Search'}
-        </button>
-      </div>
-
-      {coverResults.length > 0 && (
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 mt-4">
-          {coverResults.map(c => (
+        <div className="border border-stone-200 rounded-lg overflow-hidden mb-6 shadow-sm">
+          {results.map((book: SearchResult) => (
             <button
-              key={c.id}
-              type="button"
-              onClick={() => { setForm(f => ({ ...f, cover_url: c.url })); setShowCoverSearch(false); setCoverResults([]) }}
-              className="rounded overflow-hidden border-2 border-transparent hover:border-stone-400 transition-colors"
+              key={book.key}
+              onClick={() => selectBook(book)}
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-amber-50 border-b border-stone-100 last:border-0 text-left transition-colors"
             >
-              <img src={c.url} alt="" className="w-full h-24 object-cover" />
+              {book.cover_i ? (
+                <img
+                  src={`https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg`}
+                  className="w-8 h-11 object-cover rounded shadow-sm flex-shrink-0"
+                  alt={book.title}
+                />
+              ) : (
+                <div className="w-8 h-11 bg-stone-200 rounded flex-shrink-0" />
+              )}
+              <div>
+                <p className="text-sm font-medium text-stone-800">{book.title}</p>
+                <p className="text-xs text-stone-500 italic">{book.author_name?.[0]}</p>
+                {book.number_of_pages_median && (
+                  <p className="text-xs text-stone-400">{book.number_of_pages_median} pages</p>
+                )}
+              </div>
             </button>
           ))}
         </div>
       )}
 
-      <div className="mt-4">
-        <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Or paste an image URL</label>
-        <input
-          type="text"
-          value={form.cover_url}
-          onChange={e => setForm(f => ({ ...f, cover_url: e.target.value }))}
-          placeholder="https://…"
-          className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400 bg-white"
-        />
-      </div>
-    </div>
-  )}
-</div>
+      {/* Cover */}
+      <CoverPicker
+        value={form.cover_url}
+        onChange={url => setForm(f => ({ ...f, cover_url: url }))}
+        title={form.title}
+        author={form.author}
+      />
 
       {/* Form fields */}
       <div className="space-y-4">
@@ -312,21 +221,21 @@ router.refresh()
           <div>
             <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Genre</label>
             <select value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}
-  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50">
-  <option value="">Select…</option>
-  <option>Paranormal Romance</option>
-  <option>Dark Romance</option>
-  <option>Hockey Romance</option>
-  <option>Mafia Romance</option>
-  <option>Romance</option>
-  <option>Fantasy</option>
-  <option>Literary Fiction</option>
-  <option>Mystery / Thriller</option>
-  <option>Sci-Fi</option>
-  <option>Historical Fiction</option>
-  <option>Non-Fiction</option>  
-  <option>Other</option>
-</select>
+              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50">
+              <option value="">Select…</option>
+              <option>Paranormal Romance</option>
+              <option>Dark Romance</option>
+              <option>Hockey Romance</option>
+              <option>Mafia Romance</option>
+              <option>Romance</option>
+              <option>Fantasy</option>
+              <option>Literary Fiction</option>
+              <option>Mystery / Thriller</option>
+              <option>Sci-Fi</option>
+              <option>Historical Fiction</option>
+              <option>Non-Fiction</option>
+              <option>Other</option>
+            </select>
           </div>
           <div>
             <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Page Count</label>
@@ -339,18 +248,18 @@ router.refresh()
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 bg-stone-50 text-stone-800" />
           </div>
           <div>
-  <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">End Date</label>
-  <div className="flex gap-2 items-center">
-    <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))}
-      className="flex-1 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50" />
-    {form.end_date && (
-      <button onClick={() => setForm(f => ({ ...f, end_date: '' }))}
-        className="text-xs text-stone-400 hover:text-red-500 transition-colors px-2 py-1 border border-stone-200 rounded-md">
-        ✕ Clear
-      </button>
-    )}
-  </div>
-</div>
+            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">End Date</label>
+            <div className="flex gap-2 items-center">
+              <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))}
+                className="flex-1 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50" />
+              {form.end_date && (
+                <button onClick={() => setForm(f => ({ ...f, end_date: '' }))}
+                  className="text-xs text-stone-400 hover:text-red-500 transition-colors px-2 py-1 border border-stone-200 rounded-md">
+                  ✕ Clear
+                </button>
+              )}
+            </div>
+          </div>
           <div>
             <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Number in Series</label>
             <input type="text" value={form.series} onChange={e => setForm(f => ({ ...f, series: e.target.value }))}
@@ -407,46 +316,45 @@ router.refresh()
             ))}
           </div>
         </div>
-<div>
-  <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Short Note</label>
-  <input
-    type="text"
-    value={form.short_note}
-    onChange={e => setForm(f => ({ ...f, short_note: e.target.value }))}
-    placeholder="One line summary or highlight…"
-    maxLength={120}
-    className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50"
-  />
-</div>
+
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Short Note</label>
+          <input
+            type="text"
+            value={form.short_note}
+            onChange={e => setForm(f => ({ ...f, short_note: e.target.value }))}
+            placeholder="One line summary or highlight…"
+            maxLength={120}
+            className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50"
+          />
+        </div>
+
         {/* Notes */}
         <div>
-  <div className="flex items-center justify-between mb-1">
-    <label className="block text-xs uppercase tracking-wider text-stone-400">Notes</label>
-    <button
-      onClick={() => {
-        if (notesHistory.length === 0) return
-        const prev = notesHistory[notesHistory.length - 1]
-        setForm(f => ({ ...f, notes: prev }))
-        setNotesHistory(h => h.slice(0, -1))
-      }}
-      disabled={notesHistory.length === 0}
-      className="text-xs text-stone-400 hover:text-stone-600 disabled:opacity-30 transition-colors px-2 py-1 border border-stone-200 rounded-md"
-    >
-      ↩ Undo
-    </button>
-  </div>
-  <textarea
-    value={form.notes}
-    onChange={e => {
-      setNotesHistory(h => [...h, form.notes])
-      setForm(f => ({ ...f, notes: e.target.value }))
-    }}
-    placeholder="Your thoughts, reflections, favorite moments…"
-    rows={20}
-className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50 resize-none leading-relaxed overflow-y-auto"
-style={{ height: '500px' }}
-  />
-</div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs uppercase tracking-wider text-stone-400">Notes</label>
+            <button
+              onClick={() => {
+                if (notesHistory.length === 0) return
+                const prev = notesHistory[notesHistory.length - 1]
+                setForm(f => ({ ...f, notes: prev }))
+                setNotesHistory(h => h.slice(0, -1))
+              }}
+              disabled={notesHistory.length === 0}
+              className="text-xs text-stone-400 hover:text-stone-600 disabled:opacity-30 transition-colors px-2 py-1 border border-stone-200 rounded-md"
+            >
+              ↩ Undo
+            </button>
+          </div>
+          <textarea
+            value={form.notes}
+            onChange={e => updateNotes(e.target.value)}
+            placeholder="Your thoughts, reflections, favorite moments…"
+            rows={20}
+            className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 bg-stone-50 resize-none leading-relaxed overflow-y-auto"
+            style={{ height: '500px' }}
+          />
+        </div>
 
         <button
           onClick={handleSave}
